@@ -43,46 +43,33 @@ def parse_args():
         "-jI",
         "--jamminginterface",
         help=("Manually choose an interface that supports monitor mode for " +
-              "deauthenticating the victims. " +
-              "Example: -jI wlan1"
-              )
-    )
+              "deauthenticating the victims. " + "Example: -jI wlan1"))
     parser.add_argument(
         "-aI",
         "--apinterface",
-        help=("Manually choose an interface that supports AP mode for  " +
-              "spawning an AP. " +
-              "Example: -aI wlan0"
-              )
-    )
+        help=("Manually choose an interface that supports AP mode for  " + "spawning an AP. " +
+              "Example: -aI wlan0"))
     parser.add_argument(
         "-iI",
         "--internetinterface",
-        help=("Choose an interface that is connected on the Internet" +
-              "Example: -iI ppp0"
-              )
-    )
+        help=("Choose an interface that is connected on the Internet" + "Example: -iI ppp0"))
     parser.add_argument(
         "-nJ",
         "--nojamming",
         help=("Skip the deauthentication phase. When this option is used, " +
-              "only one wireless interface is required"
-              ),
+              "only one wireless interface is required"),
         action='store_true')
     parser.add_argument(
         "-e",
         "--essid",
         help=("Enter the ESSID of the rogue Access Point. " +
               "This option will skip Access Point selection phase. " +
-              "Example: --essid 'Free WiFi'"
-              )
-    )
+              "Example: --essid 'Free WiFi'"))
     parser.add_argument(
         "-dE",
         "--deauth-essid",
         help=("Deauth all the BSSIDs having same ESSID from AP selection or " +
-              "the ESSID given by -e option"
-              ),
+              "the ESSID given by -e option"),
         action='store_true')
     parser.add_argument(
         "-p",
@@ -93,8 +80,8 @@ def parse_args():
     parser.add_argument(
         "-pK",
         "--presharedkey",
-        help=("Add WPA/WPA2 protection on the rogue Access Point. " +
-              "Example: -pK s3cr3tp4ssw0rd"))
+        help=(
+            "Add WPA/WPA2 protection on the rogue Access Point. " + "Example: -pK s3cr3tp4ssw0rd"))
     parser.add_argument(
         "-hC",
         "--handshake-capture",
@@ -119,9 +106,7 @@ def parse_args():
               "to believe it is within an area that was previously captured "
               "with --lure10-capture. Part of the Lure10 attack."))
     parser.add_argument(
-        "-iAM",
-        "--mac-ap-interface",
-        help=("Specify the MAC address of the AP interface"))
+        "-iAM", "--mac-ap-interface", help=("Specify the MAC address of the AP interface"))
     parser.add_argument(
         "-iDM",
         "--mac-deauth-interface",
@@ -129,14 +114,10 @@ def parse_args():
     parser.add_argument(
         "-iNM",
         "--no-mac-randomization",
-        help=("Do not change any MAC address"), action='store_true')
-    parser.add_argument(
-        "--logging",
-        help=("Log activity to file"),
-        action="store_true")
-    parser.add_argument(
-        "--payload-path",
-        help=("Payload path for scenarios serving a payload"))
+        help=("Do not change any MAC address"),
+        action='store_true')
+    parser.add_argument("--logging", help=("Log activity to file"), action="store_true")
+    parser.add_argument("--payload-path", help=("Payload path for scenarios serving a payload"))
 
     return parser.parse_args()
 
@@ -161,26 +142,19 @@ def setup_logging(args):
         should_roll_over and root_logger.handlers[0].doRollover()
         logger.info("Starting Wifiphisher")
 
+
 def set_ip_fwd():
     """
     Set kernel variables.
     """
-    Popen(
-        ['sysctl', '-w', 'net.ipv4.ip_forward=1'],
-        stdout=DN,
-        stderr=PIPE
-    )
+    Popen(['sysctl', '-w', 'net.ipv4.ip_forward=1'], stdout=DN, stderr=PIPE)
 
 
 def set_route_localnet():
     """
     Set kernel variables.
     """
-    Popen(
-        ['sysctl', '-w', 'net.ipv4.conf.all.route_localnet=1'],
-        stdout=DN,
-        stderr=PIPE
-    )
+    Popen(['sysctl', '-w', 'net.ipv4.conf.all.route_localnet=1'], stdout=DN, stderr=PIPE)
 
 
 def kill_interfering_procs():
@@ -194,15 +168,9 @@ def kill_interfering_procs():
     # stop the NetworkManager related services
     # incase service is not installed catch OSError
     try:
-        subprocess.Popen(['service', 'network-manager', 'stop'],
-                         stdout=subprocess.PIPE,
-                         stderr=DN)
-        subprocess.Popen(['service', 'NetworkManager', 'stop'],
-                         stdout=subprocess.PIPE,
-                         stderr=DN)
-        subprocess.Popen(['service', 'avahi-daemon', 'stop'],
-                         stdout=subprocess.PIPE,
-                         stderr=DN)
+        subprocess.Popen(['service', 'network-manager', 'stop'], stdout=subprocess.PIPE, stderr=DN)
+        subprocess.Popen(['service', 'NetworkManager', 'stop'], stdout=subprocess.PIPE, stderr=DN)
+        subprocess.Popen(['service', 'avahi-daemon', 'stop'], stdout=subprocess.PIPE, stderr=DN)
     except OSError:
         pass
 
@@ -223,7 +191,6 @@ def kill_interfering_procs():
 
 
 class WifiphisherEngine:
-
     def __init__(self):
         self.mac_matcher = macmatcher.MACMatcher(MAC_PREFIX_FILE)
         self.network_manager = interfaces.NetworkManager()
@@ -289,51 +256,42 @@ class WifiphisherEngine:
         try:
             if self.opmode.internet_sharing_enabled():
                 self.network_manager.internet_access_enable = True
-                if self.network_manager.is_interface_valid(
-                        args.internetinterface, "internet"):
+                if self.network_manager.is_interface_valid(args.internetinterface, "internet"):
                     internet_interface = args.internetinterface
-                    if interfaces.is_wireless_interface(
-                            internet_interface):
+                    if interfaces.is_wireless_interface(internet_interface):
                         self.network_manager.unblock_interface(internet_interface)
                 logger.info("Selecting %s interface for accessing internet",
                             args.internetinterface)
             if self.opmode.advanced_enabled():
                 if args.jamminginterface and args.apinterface:
-                    if self.network_manager.is_interface_valid(
-                            args.jamminginterface, "monitor"):
+                    if self.network_manager.is_interface_valid(args.jamminginterface, "monitor"):
                         mon_iface = args.jamminginterface
                         self.network_manager.unblock_interface(mon_iface)
-                    if self.network_manager.is_interface_valid(
-                            args.apinterface, "AP"):
+                    if self.network_manager.is_interface_valid(args.apinterface, "AP"):
                         ap_iface = args.apinterface
                 else:
                     mon_iface, ap_iface = self.network_manager.get_interface_automatically()
                 # display selected interfaces to the user
                 logger.info("Selecting {} for deauthentication and {} for rouge access point"
                             .format(mon_iface, ap_iface))
-                print (
-                    "[{0}+{1}] Selecting {0}{2}{1} interface for the deauthentication "
-                    "attack\n[{0}+{1}] Selecting {0}{3}{1} interface for creating the "
-                    "rogue Access Point").format(
-                    G, W, mon_iface, ap_iface)
+                print("[{0}+{1}] Selecting {0}{2}{1} interface for the deauthentication "
+                      "attack\n[{0}+{1}] Selecting {0}{3}{1} interface for creating the "
+                      "rogue Access Point").format(G, W, mon_iface, ap_iface)
 
                 # randomize the mac addresses
                 if not args.no_mac_randomization:
                     if args.mac_ap_interface:
-                        self.network_manager.set_interface_mac(
-                            ap_iface, args.mac_ap_interface)
+                        self.network_manager.set_interface_mac(ap_iface, args.mac_ap_interface)
                     else:
                         self.network_manager.set_interface_mac_random(ap_iface)
                     if args.mac_deauth_interface:
-                        self.network_manager.set_interface_mac(
-                            mon_iface, args.mac_deauth_interface)
+                        self.network_manager.set_interface_mac(mon_iface,
+                                                               args.mac_deauth_interface)
                     else:
-                        self.network_manager.set_interface_mac_random(
-                            mon_iface)
+                        self.network_manager.set_interface_mac_random(mon_iface)
             if not self.opmode.deauth_enabled():
                 if args.apinterface:
-                    if self.network_manager.is_interface_valid(
-                            args.apinterface, "AP"):
+                    if self.network_manager.is_interface_valid(args.apinterface, "AP"):
                         ap_iface = args.apinterface
                 else:
                     ap_iface = self.network_manager.get_interface(True, False)
@@ -341,17 +299,13 @@ class WifiphisherEngine:
 
                 if not args.no_mac_randomization:
                     if args.mac_ap_interface:
-                        self.network_manager.set_interface_mac(
-                            ap_iface, args.mac_ap_interface)
+                        self.network_manager.set_interface_mac(ap_iface, args.mac_ap_interface)
                     else:
                         self.network_manager.set_interface_mac_random(ap_iface)
 
-                print (
-                    "[{0}+{1}] Selecting {0}{2}{1} interface for creating the "
-                    "rogue Access Point").format(
-                    G, W, ap_iface)
-                logger.info("Selecting {} interface for rouge access point"
-                            .format(ap_iface))
+                print("[{0}+{1}] Selecting {0}{2}{1} interface for creating the "
+                      "rogue Access Point").format(G, W, ap_iface)
+                logger.info("Selecting {} interface for rouge access point".format(ap_iface))
                 # randomize the mac addresses
                 if not args.no_mac_randomization:
                     self.network_manager.set_interface_mac_random(ap_iface)
@@ -363,11 +317,10 @@ class WifiphisherEngine:
             # set monitor mode only when --essid is not given
             if self.opmode.advanced_enabled() or args.essid is None:
                 self.network_manager.set_interface_mode(mon_iface, "monitor")
-        except (interfaces.InvalidInterfaceError,
-                interfaces.InterfaceCantBeFoundError,
+        except (interfaces.InvalidInterfaceError, interfaces.InterfaceCantBeFoundError,
                 interfaces.InterfaceManagedByNetworkManagerError) as err:
             logger.exception("The following error has occurred:")
-            print ("[{0}!{1}] {2}").format(R, W, err)
+            print("[{0}!{1}] {2}").format(R, W, err)
 
             time.sleep(1)
             self.stop()
@@ -379,12 +332,13 @@ class WifiphisherEngine:
         rogue_ap_mac = self.network_manager.get_interface_mac(ap_iface)
         if not args.no_mac_randomization:
             logger.info("Changing {} MAC address to {}".format(ap_iface, rogue_ap_mac))
-            print "[{0}+{1}] Changing {2} MAC addr (BSSID) to {3}".format(G, W, ap_iface, rogue_ap_mac)
+            print "[{0}+{1}] Changing {2} MAC addr (BSSID) to {3}".format(
+                G, W, ap_iface, rogue_ap_mac)
 
             if self.opmode.advanced_enabled():
                 mon_mac = self.network_manager.get_interface_mac(mon_iface)
                 logger.info("Changing {} MAC address to {}".format(mon_iface, mon_mac))
-                print ("[{0}+{1}] Changing {2} MAC addr to {3}".format(G, W, mon_iface, mon_mac))
+                print("[{0}+{1}] Changing {2} MAC addr to {3}".format(G, W, mon_iface, mon_mac))
 
         if self.opmode.internet_sharing_enabled():
             self.fw.nat(ap_iface, args.internetinterface)
@@ -407,11 +361,9 @@ class WifiphisherEngine:
             # let user choose access point
             # start the monitor adapter
             self.network_manager.up_interface(mon_iface)
-            ap_info_object = tui.ApSelInfo(mon_iface, self.mac_matcher,
-                                           self.network_manager, args)
+            ap_info_object = tui.ApSelInfo(mon_iface, self.mac_matcher, self.network_manager, args)
             ap_sel_object = tui.TuiApSel()
-            access_point = curses.wrapper(ap_sel_object.gather_info,
-                                          ap_info_object)
+            access_point = curses.wrapper(ap_sel_object.gather_info, ap_info_object)
             # if the user has chosen a access point continue
             # otherwise shutdown
             if access_point:
@@ -428,8 +380,7 @@ class WifiphisherEngine:
         tui_template_obj = tui.TuiTemplateSelection()
         template = tui_template_obj.gather_info(args.phishingscenario, self.template_manager)
         logger.info("Selecting {} template".format(template.get_display_name()))
-        print ("[" + G + "+" + W + "] Selecting " +
-               template.get_display_name() + " template")
+        print("[" + G + "+" + W + "] Selecting " + template.get_display_name() + " template")
 
         # payload selection for browser plugin update
         if template.has_payload():
@@ -437,22 +388,13 @@ class WifiphisherEngine:
             # copy payload to update directory
             while not payload_path or not os.path.isfile(payload_path):
                 # get payload path
-                payload_path = raw_input(
-                    "[" +
-                    G +
-                    "+" +
-                    W +
-                    "] Enter the [" +
-                    G +
-                    "full path" +
-                    W +
-                    "] to the payload you wish to serve: ")
+                payload_path = raw_input("[" + G + "+" + W + "] Enter the [" + G + "full path" + W
+                                         + "] to the payload you wish to serve: ")
                 if not os.path.isfile(payload_path):
                     print '[' + R + '-' + W + '] Invalid file path!'
             print '[' + T + '*' + W + '] Using ' + G + payload_path + W + ' as payload '
             template.update_payload_path(os.path.basename(payload_path))
-            copyfile(payload_path, PHISHING_PAGES_DIR +
-                     template.get_payload_path())
+            copyfile(payload_path, PHISHING_PAGES_DIR + template.get_payload_path())
 
         APs_context = []
         for i in APs:
@@ -468,16 +410,21 @@ class WifiphisherEngine:
         # only get logo path if MAC address is present
         ap_logo_path = False
         if target_ap_mac is not None:
-            ap_logo_path = template.use_file(
-                self.mac_matcher.get_vendor_logo_path(target_ap_mac))
+            ap_logo_path = template.use_file(self.mac_matcher.get_vendor_logo_path(target_ap_mac))
 
         template.merge_context({
-            'target_ap_channel': channel or "",
-            'target_ap_essid': essid or "",
-            'target_ap_bssid': target_ap_mac or "",
-            'target_ap_encryption': enctype or "",
-            'target_ap_vendor': self.mac_matcher.get_vendor_name(target_ap_mac) or "",
-            'target_ap_logo_path': ap_logo_path or ""
+            'target_ap_channel':
+            channel or "",
+            'target_ap_essid':
+            essid or "",
+            'target_ap_bssid':
+            target_ap_mac or "",
+            'target_ap_encryption':
+            enctype or "",
+            'target_ap_vendor':
+            self.mac_matcher.get_vendor_name(target_ap_mac) or "",
+            'target_ap_logo_path':
+            ap_logo_path or ""
         })
 
         # We want to set this now for hostapd. Maybe the interface was in "monitor"
@@ -526,9 +473,11 @@ class WifiphisherEngine:
         # With configured DHCP, we may now start the web server
         if not self.opmode.internet_sharing_enabled():
             # Start HTTP server in a background thread
-            print '[' + T + '*' + W + '] Starting HTTP/HTTPS server at ports ' + str(PORT) + ", " + str(SSL_PORT)
-            webserver = Thread(target=phishinghttp.runHTTPServer,
-                               args=(NETWORK_GW_IP, PORT, SSL_PORT, template, self.em))
+            print '[' + T + '*' + W + '] Starting HTTP/HTTPS server at ports ' + str(
+                PORT) + ", " + str(SSL_PORT)
+            webserver = Thread(
+                target=phishinghttp.runHTTPServer,
+                args=(NETWORK_GW_IP, PORT, SSL_PORT, template, self.em))
             webserver.daemon = True
             webserver.start()
 
@@ -542,8 +491,7 @@ class WifiphisherEngine:
 
         # Main loop.
         try:
-            main_info = tui.MainInfo(VERSION, essid, channel, ap_iface,
-                                     self.em, phishinghttp,
+            main_info = tui.MainInfo(VERSION, essid, channel, ap_iface, self.em, phishinghttp,
                                      args)
             tui_main_object = tui.TuiMain()
             curses.wrapper(tui_main_object.gather_info, main_info)
@@ -554,8 +502,8 @@ class WifiphisherEngine:
 
 def run():
     try:
-        print ('[' + T + '*' + W + '] Starting Wifiphisher %s ( %s ) at %s' %
-               (VERSION, WEBSITE, time.strftime("%Y-%m-%d %H:%M")))
+        print('[' + T + '*' + W + '] Starting Wifiphisher %s ( %s ) at %s' %
+              (VERSION, WEBSITE, time.strftime("%Y-%m-%d %H:%M")))
         engine = WifiphisherEngine()
         engine.start()
     except KeyboardInterrupt:
